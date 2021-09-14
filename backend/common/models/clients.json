@@ -1,0 +1,46 @@
+{
+  "name": "clients",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "email": {
+      "type": "string",
+      "required": true
+    },
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "surname": {
+      "type": "string",
+      "required": true
+    },
+    "cpf": {
+      "type": "string",
+      "required": true
+    },
+    "phone": {
+      "type": "string",
+      "required": true
+    },
+    "person_type": {
+      "type": "string",
+      "required": true
+    },
+    "alow_promotions": {
+      "type": "string",
+      "required": true
+    },
+    "createdAt": {
+      "type": "date",
+      "required": true
+    }  
+  },
+  "validations": [],
+  "relations": {},
+  "acls": [],
+  "methods": {}
+}
