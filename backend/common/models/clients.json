@@ -28,15 +28,17 @@
     },
     "person_type": {
       "type": "string",
-      "required": true
+      "required": false
     },
-    "alow_promotions": {
+    "allow_promotions": {
       "type": "string",
-      "required": true
+      "required": false
     },
     "createdAt": {
       "type": "date",
-      "required": true
+      "required": true,
+      "dataType": "timestamp",
+      "defaultFn": "now"
     }  
   },
   "validations": [],

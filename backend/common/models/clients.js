@@ -21,7 +21,9 @@ module.exports = function (clients) {
    */
 
     clients.register = function (data, callback) {
-        if (JSON.stringify(data) !== '{}') {
+        const erros = Validation(data)
+
+        if (erros.length === 0) {
             // validates if the client is already registered 
             clients.findOne({ "where": { "cpf": data.cpf } }, function (error, instance) {
                 if (!error) {
@@ -36,9 +38,9 @@ module.exports = function (clients) {
             });
         } else {
             callback(commonService.errorMaker({
-                statusCode: 400,
-                name: "BAD REQUEST",
-                message: "Falha ao criar cliente."
+                statusCode: 422,
+                name: "Unprocessable Entity",
+                message: erros
             }));
         }
     };
@@ -51,7 +53,7 @@ module.exports = function (clients) {
     clients.insertNewClient = function (data, cb) {
         clients.create(data, function (errorClient, ClientSaved) {
             if (!errorClient) {
-                cb(null, { statusCode: '200', message: "Cliente registrado para entrega com sucesso." });
+                cb(null, { statusCode: '201', message: "Cliente registrado para entrega com sucesso.", ClientSaved });
             } else {
                 cb(commonService.errorMaker(errorClient));
             }
@@ -71,7 +73,7 @@ module.exports = function (clients) {
             instance.updateAttributes({ "surname": data.surname }),
             instance.updateAttributes({ "phone": data.phone }),
             instance.updateAttributes({ "person_type": data.person_type }),
-            instance.updateAttributes({ "allow_promotions": data.allow_promotions })            
+            instance.updateAttributes({ "allow_promotions": data.allow_promotions })
         ];
 
         return Promise.all(promises)
@@ -81,6 +83,55 @@ module.exports = function (clients) {
             .catch(callErr => {
                 callback(commonService.errorMaker(callErr));
             })
+    }
+
+    /**
+   * Function responsible for validation the object received
+   * @param {data} object - Object containing the client information provided for the API
+   */
+    function Validation(data) {
+        let erros = []
+        let str_email = /\S+@\S+\.\S+/
+        let str_phone = /(\(?\d{2}\)?\s)?(\d{4,5}\-?\d{4})/
+        let str_cpf = /^(([0-9]{3}.[0-9]{3}.[0-9]{3}-[0-9]{2})|([0-9]{11}))$/
+        let str_cnpj = /^(([0-9]{2}\.?[0-9]{3}\.?[0-9]{3}\/?[0-9]{4}\-?[0-9]{2}))$/
+        let cpf = data.cpf?.replace(/[\(\)\.\s-/]+/g, '')
+
+        if (data.email === undefined || data.name === undefined || data.surname === undefined || data.cpf === undefined ||
+            data.phone === undefined || data.person_type === undefined || data.allow_promotions === undefined) {
+            erros.push({ "Objeto inválido": ["Propriedade obrigatórias: email|name|surname|cpf|phone|person_type|allow_promotions"] })
+            return erros;
+        }
+
+        if (!str_email.test(data.email) || data.email.trim() === '' || data.email.length > 100) {
+            erros.push({ "email": ["Propriedade 'email' não informada ou inválida.", "Ex: caiu.cost@gmail.com", "Type: string (100)"] })
+        }
+
+        if (data.name === '' || data.name.length > 30) {
+            erros.push({ "name": ["Propriedade 'name' não informada ou inválida.", "Ex: Caio Cesar", "Type: string (30)"] })
+        }
+
+        if (data.surname === '' || data.surname.length > 30) {
+            erros.push({ "surname": ["Propriedade 'surname' não informada ou inválida.", "Ex: Costa", "Type: string (30)"] })
+        }
+
+        if ((!str_cpf.test(cpf) && !str_cnpj.test(cpf)) || cpf.trim() === '') {
+            erros.push({ "cpf": ["Propriedade 'cpf' não informada ou inválida.", "Ex: 111.111.111-11 (CPF) ou 11.111.111/1111-11 (CNPJ)"] })
+        }
+
+        if (!str_phone.test(data.phone) || data.phone.trim() === '') {
+            erros.push({ "phone": ["Propriedade 'phone' não informada ou inválida.", "Ex: (11) 94704-5537"] })
+        }
+
+        if ((cpf === 11 && data.person_type.toUpperCase() !== 'F') || (cpf === 14 && data.person_type.toUpperCase() !== 'J') || data.person_type.trim() === '') {
+            erros.push({ "person_type": ["Propriedade 'person_type' não informada ou inválida.", " 'F' (CPF) ou 'J' (CNPJ)"] })
+        }
+
+        if (data.allow_promotions.toUpperCase() !== 'S' && data.allow_promotions.toUpperCase() !== 'N') {
+            erros.push({ "allow_promotions": ["Propriedade 'allow_promotions' não informada ou inválida.", " 'S' (Sim) ou 'N' (Não)"] })
+        }
+
+        return erros;
     }
 
     clients.remoteMethod(

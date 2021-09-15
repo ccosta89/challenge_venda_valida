@@ -6,7 +6,7 @@
   "mongodb": {
     "host": "localhost",
     "port": 27017,
-    "database": "desafio",
+    "database": "challenge_venda_valida",
     "password": "",
     "name": "mongodb",
     "connector": "mongodb",

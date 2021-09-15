@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Input as Input } from 'reactstrap';
+import { Input } from 'reactstrap';
 import Button from '@material-ui/core/Button'
 import useForm from 'react-hook-form';
 import InputMask from 'react-input-mask';
@@ -11,6 +11,9 @@ import Switch from '@material-ui/core/Switch';
 import $ from 'jquery';
 
 import { Panel, Footer, Div, Header, Div1 } from './styles'
+
+import Client from '../../models/client'
+import { saveClient } from '../../services/index'
 
 const styles = {
     width: '100%',
@@ -28,8 +31,8 @@ const styles = {
 
 export default function Registration() {
 
-    const { register, handleSubmit, errors } = useForm();
-    const [checked, setChecked] = useState(false);
+    const { register, handleSubmit, errors } = useForm<Client>()
+    const [promo, setPromo] = useState(false);
     const [email_valido, setEmail_valido] = useState(true);
     const [person_type, setPerson_type] = useState({ checkedA: false });
     const [name_label, setName_label] = useState('Primeiro nome');
@@ -38,8 +41,8 @@ export default function Registration() {
     const [idMask, setIdMask] = useState('999.999.999-99')
     const [suggestedEmail, setSuggestedEmail] = useState('')
 
-    const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setChecked(event.target.checked);
+    const handlePromo = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setPromo(event.target.checked);
     };
 
     const handlePersonType = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -76,11 +79,37 @@ export default function Registration() {
             if (email.substring(email.trim().length - 4).indexOf(".com") !== -1) {
                 setSuggestedEmail(email.trim().concat('.br'))
             }
-       }
+        }
     }
 
-    const onSubmit = async (data: any) => {
-        alert('123')
+    const onSubmit = async (data: Client) => {
+
+        let allow_promotions = 'N'
+        let person = 'F'
+
+        if (promo) { allow_promotions = 'S' }
+        if (person_type.checkedA) { person = 'J' }
+
+        const json = {
+            email: data.email,
+            name: data.nome,
+            surname: data.sobrenome,
+            cpf: data.cpf,
+            phone: data.phone,
+            person_type: person,
+            allow_promotions: allow_promotions
+        }
+
+        await saveClient(json)
+            .then(response => {
+                if (response.status === 200) {
+                   alert('post realizado com sucesso')
+                }
+
+            }).catch(error => {
+                alert('erro ao realizar o post')
+            })
+
     }
 
     return (
@@ -103,7 +132,7 @@ export default function Registration() {
                                 inputRef={register({ required: true, minLength: 7, maxLength: 100 })}
                                 tag={InputMask}
                                 onBlur={validEmail}
-                                valid = {true}
+                                valid={true}
                             />
 
                             <small>
@@ -125,10 +154,10 @@ export default function Registration() {
 
                         {suggestedEmail &&
                             <Div1 onClick={() => $(`email`).find("input").val()}>
-                                <span style={{ color: 'black', fontSize: '18px' , display: 'inline'}}>
+                                <span style={{ color: 'black', fontSize: '18px', display: 'inline' }}>
                                     {'Você quise dizer: '}
                                 </span>
-                                <span style={{ color: 'blue', fontSize: '16px' , display: 'inline'}}>
+                                <span style={{ color: 'blue', fontSize: '16px', display: 'inline' }}>
                                     {suggestedEmail.substring(0, suggestedEmail.indexOf("@") + 1)}
                                 </span>
                                 <span style={{ color: 'blue', fontSize: '16px', fontWeight: 700, display: 'inline' }}>
@@ -242,7 +271,7 @@ export default function Registration() {
                         <Div>
                             <FormControlLabel
                                 control={
-                                    <Checkbox name="checkedC" color="primary" checked={checked} onChange={handleCheck} />
+                                    <Checkbox name="checkedC" color="primary" checked={promo} onChange={handlePromo} />
                                 } label="Quero receber e-mails com promoções." />
                         </Div>
 

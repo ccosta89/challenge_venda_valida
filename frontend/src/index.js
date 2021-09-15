@@ -5,9 +5,9 @@ import Registration from './pages/Registration';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
-  <React.StrictMode>
+  
     <Registration/>
-  </React.StrictMode>,
+  ,
   document.getElementById('root')
 );
 
